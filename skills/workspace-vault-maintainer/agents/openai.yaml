@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Vault Maintainer"
+  short_description: "Restore and ingest Vault-backed workspaces."
+  default_prompt: "Use $workspace-vault-maintainer to restore a Vault-backed workspace or ingest new knowledge into its wiki."
