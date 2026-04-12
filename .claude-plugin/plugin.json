@@ -1,0 +1,22 @@
+{
+  "name": "worktree-manager-obsidian-bridge",
+  "description": "Restore and maintain Vault-backed worktree-manager workspaces for Claude Code and Codex.",
+  "version": "1.0.0",
+  "author": {
+    "name": "guoyongchang",
+    "url": "https://github.com/guoyongchang"
+  },
+  "homepage": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
+  "repository": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
+  "license": "MIT",
+  "skills": "./skills",
+  "commands": "./commands",
+  "keywords": [
+    "worktree-manager",
+    "obsidian",
+    "workspace",
+    "wiki",
+    "claude-code",
+    "codex"
+  ]
+}
