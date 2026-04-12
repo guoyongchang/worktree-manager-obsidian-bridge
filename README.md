@@ -26,6 +26,9 @@ This repo packages a reusable workflow for:
 - `.claude-plugin/plugin.json`
   A native Claude Code plugin manifest for local plugin discovery
 
+- `.claude-plugin/marketplace.json`
+  A native Claude Code marketplace catalog for installing the plugin from GitHub
+
 ## Intended workflow
 
 1. Stand in a workspace root
@@ -59,7 +62,12 @@ After that, Codex can discover the skill as `workspace-vault-maintainer`.
 
 ### Claude Code
 
-This repo ships a native Claude Code plugin manifest at `.claude-plugin/plugin.json` and keeps plugin components in the standard plugin-root locations:
+This repo ships:
+
+- `.claude-plugin/plugin.json` for local plugin discovery
+- `.claude-plugin/marketplace.json` for Claude marketplace distribution
+
+It keeps plugin components in the standard plugin-root locations:
 
 - `skills/`
 - `commands/`
@@ -78,7 +86,14 @@ worktree-manager-obsidian-bridge
 
 So plugin-scoped skills and commands will appear with that namespace in Claude Code.
 
-This repository is ready to use as a local Claude Code plugin directory. It is not, by itself, a complete Claude marketplace package. If you want marketplace distribution later, add the separate marketplace packaging expected by Claude Code.
+For marketplace installation from GitHub, add the marketplace and then install the plugin:
+
+```bash
+claude plugin marketplace add guoyongchang/worktree-manager-obsidian-bridge
+claude plugin install worktree-manager-obsidian-bridge@worktree-manager-obsidian-bridge
+```
+
+For a team project, you can also declare the marketplace and plugin in `.claude/settings.json` so Claude Code can restore them automatically at project scope.
 
 Claude Code and Codex do not consume skills in exactly the same way, so the recommended shared pattern is:
 
@@ -123,6 +138,7 @@ After meaningful work, invoke the ingest command or equivalent prompt and use `w
 ### Claude Code native
 
 - `.claude-plugin/plugin.json`
+- `.claude-plugin/marketplace.json`
 - plugin-root `skills/`
 - plugin-root `commands/`
 
@@ -130,6 +146,7 @@ This repo is intended to be:
 
 - a native Codex skill package
 - a native Claude Code local plugin directory
+- a native Claude Code marketplace catalog
 - a shared workflow definition for both tools
 
 ## Current focus
