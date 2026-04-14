@@ -8,6 +8,7 @@ This repo packages a reusable workflow for:
 - maintaining a local `.vault/` linked-docs layer
 - declaring expected Claude Code, Codex, skills, and MCP state
 - ingesting new knowledge back into the right workspace wiki pages
+- **auto-injecting Memory Wiki context on session start** (v1.1.0+)
 
 ## What is in this repo
 
@@ -19,6 +20,12 @@ This repo packages a reusable workflow for:
 
 - `commands/workspace-ingest.md`
   A reusable command/prompt entry for wiki ingest after meaningful work
+
+- `hooks/hooks.json`
+  SessionStart hook for auto-injecting Memory Wiki context
+
+- `scripts/`
+  TypeScript scripts for worktree detection and context injection
 
 - `AGENTS.md` and `CLAUDE.md`
   Repo-local instructions for maintaining this project itself
@@ -148,6 +155,49 @@ This repo is intended to be:
 - a native Claude Code local plugin directory
 - a native Claude Code marketplace catalog
 - a shared workflow definition for both tools
+
+## Memory Wiki Auto-Injection (v1.1.0+)
+
+When you start a Claude Code session in a worktree, the plugin automatically:
+
+1. Detects if you're in a worktree-manager workspace
+2. Extracts the branch name and maps it to a requirement ID (e.g., `feature-27118` -> `ERP-27118`)
+3. Loads the relevant requirement page from `.vault/memory/requirements/`
+4. Injects the context into the conversation
+
+Example output on session start:
+
+```
+[worktree-memory] 4/14/2026, 11:26:13 PM
+──────────────────────────────────────────────────
+Branch: feature-27118
+Requirement: ERP-27118
+Memory loaded: requirements/ERP-27118.md
+──────────────────────────────────────────────────
+```
+
+### Memory Wiki Structure
+
+The Memory Wiki follows the LLM Wiki model (Karpathy):
+
+```
+.vault/memory/
+├── index.md          # Search index
+├── log.md            # Activity log
+├── schema.md         # Structure rules
+├── requirements/     # Requirement pages (ERP-XXXXX.md)
+├── projects/         # Project pages
+└── concepts/         # Reusable concept pages
+```
+
+### Branch-to-Requirement Mapping
+
+The plugin supports multiple branch naming patterns:
+
+- `feature-27118` -> `ERP-27118`
+- `fix-27118` -> `ERP-27118`
+- `ERP-27118-xxx` -> `ERP-27118`
+- `hotfix-27118` -> `ERP-27118`
 
 ## Current focus
 

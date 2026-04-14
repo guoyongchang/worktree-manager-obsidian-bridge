@@ -1,0 +1,18 @@
+{
+  "description": "Worktree Manager Memory Wiki hooks - auto-inject context on session start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; _R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/cache/worktree-manager-obsidian-bridge-skill/worktree-manager-obsidian-bridge\"; bun run \"$_R/scripts/inject-context.ts\" 2>&1",
+            "timeout": 10000,
+            "statusMessage": "Loading worktree memory..."
+          }
+        ]
+      }
+    ]
+  }
+}

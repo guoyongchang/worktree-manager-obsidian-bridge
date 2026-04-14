@@ -1,7 +1,7 @@
 {
   "name": "worktree-manager-obsidian-bridge",
-  "description": "Restore and maintain Vault-backed worktree-manager workspaces for Claude Code and Codex.",
-  "version": "1.0.0",
+  "description": "Restore and maintain Vault-backed worktree-manager workspaces for Claude Code and Codex. Auto-inject Memory Wiki context on session start.",
+  "version": "1.1.0",
   "author": {
     "name": "guoyongchang",
     "url": "https://github.com/guoyongchang"
@@ -11,12 +11,15 @@
   "license": "MIT",
   "skills": "./skills",
   "commands": "./commands",
+  "hooks": "./hooks",
   "keywords": [
     "worktree-manager",
     "obsidian",
     "workspace",
     "wiki",
     "claude-code",
-    "codex"
+    "codex",
+    "memory",
+    "context-injection"
   ]
 }
