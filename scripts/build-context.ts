@@ -72,6 +72,15 @@ export function buildContext(worktree: WorktreeInfo, memory: MemoryResult): stri
   parts.push("<worktree-memory>");
   parts.push("");
 
+  // Instruction for Claude to acknowledge the context
+  parts.push("<display-to-user>");
+  parts.push(`Memory Wiki context loaded for branch \`${worktree.branch}\``);
+  if (worktree.requirementId) {
+    parts.push(`Requirement: **${worktree.requirementId}**`);
+  }
+  parts.push("</display-to-user>");
+  parts.push("");
+
   // Worktree info
   parts.push("## Current Worktree");
   parts.push(`- Path: ${worktree.cwd}`);
