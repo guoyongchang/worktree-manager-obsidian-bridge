@@ -19,35 +19,43 @@ function fileLog(message: string): void {
 async function main() {
   const cwd = process.cwd();
   fileLog(`CWD: ${cwd}`);
-  fileLog(`ENV DEMO: ${process.env.DEMO || "not set"}`);
+
+  let injectedLines = 0;
 
   const worktree = await detectWorktree(cwd);
 
   if (!worktree) {
     fileLog("Not a worktree-manager workspace, skipping");
-    return;
+  } else {
+    fileLog(`Detected worktree: branch=${worktree.branch}, req=${worktree.requirementId}`);
+
+    const memory = await queryMemory(worktree);
+
+    if (!memory.requirement && !memory.project && memory.concepts.length === 0) {
+      fileLog("No memory found for this worktree");
+    } else {
+      fileLog(`Memory found: req=${!!memory.requirement}, project=${!!memory.project}, concepts=${memory.concepts.length}`);
+
+      const context = buildContext(worktree, memory);
+      injectedLines = context.split("\n").length;
+      fileLog(`Output length: ${context.length} chars, ${injectedLines} lines`);
+
+      // Output to stdout - Claude will receive this as context
+      console.log(context);
+    }
   }
 
-  fileLog(`Detected worktree: branch=${worktree.branch}, req=${worktree.requirementId}`);
-
-  const memory = await queryMemory(worktree);
-
-  if (!memory.requirement && !memory.project && memory.concepts.length === 0) {
-    fileLog("No memory found for this worktree");
-    return;
-  }
-
-  fileLog(`Memory found: req=${!!memory.requirement}, project=${!!memory.project}, concepts=${memory.concepts.length}`);
-
-  const context = buildContext(worktree, memory);
-
-  fileLog(`Output length: ${context.length} chars`);
-
-  // Output to stdout - Claude will receive this as context
-  console.log(context);
+  // Always print status lines so user sees the hook ran
+  console.log("<display-to-user>");
+  console.log("[worktree-manager-memory] injected.");
+  console.log(`[worktree-manager-memory] total: ${injectedLines} lines.`);
+  console.log("</display-to-user>");
 }
 
 main().catch((err) => {
   fileLog(`Error: ${err.message}`);
-  console.error("worktree-memory-hook error:", err.message);
+  console.log("<display-to-user>");
+  console.log("[worktree-manager-memory] injected.");
+  console.log("[worktree-manager-memory] total: 0 lines.");
+  console.log("</display-to-user>");
 });
