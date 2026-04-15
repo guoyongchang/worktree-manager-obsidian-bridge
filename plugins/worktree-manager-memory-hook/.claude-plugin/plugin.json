@@ -1,7 +1,7 @@
 {
   "name": "worktree-manager-memory-hook",
   "description": "Auto-inject Memory Wiki context when entering a worktree-manager workspace.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "guoyongchang",
     "url": "https://github.com/guoyongchang"
