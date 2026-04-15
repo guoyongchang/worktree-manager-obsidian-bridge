@@ -4,14 +4,14 @@
     "name": "guoyongchang"
   },
   "metadata": {
-    "description": "Claude Code marketplace for restoring and maintaining Vault-backed worktree-manager workspaces with Memory Wiki context injection.",
-    "version": "1.1.0"
+    "description": "Claude Code marketplace for worktree-manager workspaces with Vault-backed knowledge management.",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "worktree-manager-obsidian-bridge",
-      "description": "Restore and maintain Vault-backed worktree-manager workspaces for Claude Code and Codex. Auto-inject Memory Wiki context on session start.",
-      "version": "1.1.0",
+      "description": "Restore and maintain Vault-backed worktree-manager workspaces for Claude Code and Codex.",
+      "version": "1.0.0",
       "author": {
         "name": "guoyongchang"
       },
@@ -24,9 +24,7 @@
         "workspace",
         "wiki",
         "claude-code",
-        "codex",
-        "memory",
-        "context-injection"
+        "codex"
       ],
       "category": "Developer Tools",
       "tags": [
@@ -34,11 +32,34 @@
         "knowledge-management",
         "obsidian",
         "restore",
-        "ingest",
-        "memory-wiki",
-        "context"
+        "ingest"
       ],
       "source": "./"
+    },
+    {
+      "name": "worktree-manager-memory-hook",
+      "description": "Auto-inject Memory Wiki context when entering a worktree-manager workspace.",
+      "version": "1.0.0",
+      "author": {
+        "name": "guoyongchang"
+      },
+      "homepage": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
+      "repository": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
+      "license": "MIT",
+      "keywords": [
+        "worktree-manager",
+        "memory-wiki",
+        "context-injection",
+        "claude-code"
+      ],
+      "category": "Developer Tools",
+      "tags": [
+        "memory",
+        "context",
+        "hooks",
+        "worktree"
+      ],
+      "source": "./plugins/worktree-manager-memory-hook"
     }
   ]
 }
