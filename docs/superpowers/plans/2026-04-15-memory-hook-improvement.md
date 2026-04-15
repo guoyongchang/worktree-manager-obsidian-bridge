@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-04-15-memory-hook-improvement-design.md`
 
+**Status:** Completed on 2026-04-15. The checklist below is retained as the historical execution plan for this implementation, not as an open task list.
+
 ---
 
 ## File Structure

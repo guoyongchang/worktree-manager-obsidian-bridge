@@ -58,7 +58,7 @@ fi
 session_output="$(
   HOME="$tmpdir" \
   CLAUDE_PLUGIN_ROOT="$PLUGIN_DIR" \
-  zsh -lc "$session_start_cmd"
+  bash -lc "$session_start_cmd"
 )"
 
 printf '%s\n' "$session_output" | grep -q "<display-to-user>" || {
