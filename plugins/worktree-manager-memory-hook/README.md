@@ -12,39 +12,35 @@ When you start a Claude Code session in a worktree-manager workspace, this plugi
 4. Injects the context into Claude's prompt
 5. Displays status: `[worktree-manager-memory] injected.` and `total: N lines.`
 
+The plugin now uses Claude Code's native plugin `SessionStart` hook. Its `Setup` hook is retained only for environment checks.
+The plugin does not modify `~/.claude/settings.json`.
+
 ## Installation
 
 ### Via marketplace
 
 ```bash
 claude plugin marketplace add guoyongchang/worktree-manager-obsidian-bridge
-claude plugin install worktree-manager-obsidian-bridge@worktree-manager-memory-hook
+claude plugin install worktree-manager-memory-hook@worktree-manager-obsidian-bridge
 ```
 
-The plugin's Setup hook automatically writes the SessionStart hook into `~/.claude/settings.json`. Restart Claude Code to activate.
+If you just enabled the plugin, start a new Claude Code session so the native `SessionStart` hook is active.
 
 ### Via plugin-dir (development)
 
 ```bash
 claude --plugin-dir /path/to/worktree-manager-memory-hook
-# Then manually run setup:
-bash /path/to/worktree-manager-memory-hook/scripts/setup.sh /path/to/worktree-manager-memory-hook
 ```
 
 ## Uninstall
 
 ```bash
-# Remove the SessionStart hook from settings.json
-bash ~/.claude/worktree-memory-uninstall.sh
-
-# Then uninstall the plugin
-claude plugin uninstall worktree-manager-obsidian-bridge@worktree-manager-memory-hook
+claude plugin uninstall worktree-manager-memory-hook@worktree-manager-obsidian-bridge
 ```
 
 ## Requirements
 
 - [Bun](https://bun.sh) runtime installed
-- Python 3 (for setup/uninstall JSON manipulation)
 - A worktree-manager workspace with `.vault/memory/` structure
 
 ## Memory Wiki structure
@@ -77,8 +73,8 @@ Check the hook log:
 tail -f /tmp/worktree-memory-hook.log
 ```
 
-Check if the SessionStart hook is in settings.json:
+Validate the plugin manifest locally:
 
 ```bash
-python3 -c "import json; d=json.load(open('$HOME/.claude/settings.json')); print(json.dumps(d.get('hooks',{}), indent=2))"
+claude plugin validate /path/to/worktree-manager-memory-hook
 ```
