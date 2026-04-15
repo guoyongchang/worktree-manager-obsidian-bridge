@@ -1,6 +1,6 @@
 # worktree-manager-memory-hook
 
-Auto-inject Memory Wiki context when entering a worktree-manager workspace via Claude Code hooks.
+Auto-inject Memory Wiki context when entering a worktree-manager workspace via Claude Code.
 
 ## What it does
 
@@ -10,6 +10,10 @@ When you start a Claude Code session in a worktree-manager workspace, this plugi
 2. Extracts the requirement ID from the branch name (e.g., `feature-27118` → `ERP-27118`)
 3. Loads relevant context from `.vault/memory/`
 4. Injects the context into Claude's prompt
+5. Displays status: `[worktree-manager-memory] injected.` and `total: N lines.`
+
+The plugin now uses Claude Code's native plugin `SessionStart` hook. Its `Setup` hook is retained only for environment checks.
+The plugin does not modify `~/.claude/settings.json`.
 
 ## Installation
 
@@ -17,13 +21,21 @@ When you start a Claude Code session in a worktree-manager workspace, this plugi
 
 ```bash
 claude plugin marketplace add guoyongchang/worktree-manager-obsidian-bridge
-claude plugin install worktree-manager-obsidian-bridge@worktree-manager-memory-hook
+claude plugin install worktree-manager-memory-hook@worktree-manager-obsidian-bridge
 ```
+
+If you just enabled the plugin, start a new Claude Code session so the native `SessionStart` hook is active.
 
 ### Via plugin-dir (development)
 
 ```bash
 claude --plugin-dir /path/to/worktree-manager-memory-hook
+```
+
+## Uninstall
+
+```bash
+claude plugin uninstall worktree-manager-memory-hook@worktree-manager-obsidian-bridge
 ```
 
 ## Requirements
@@ -59,4 +71,10 @@ Check the hook log:
 
 ```bash
 tail -f /tmp/worktree-memory-hook.log
+```
+
+Validate the plugin manifest locally:
+
+```bash
+claude plugin validate /path/to/worktree-manager-memory-hook
 ```

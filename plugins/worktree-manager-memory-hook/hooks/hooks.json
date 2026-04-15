@@ -1,10 +1,28 @@
 {
+  "description": "Native SessionStart context injection for worktree-manager workspaces.",
   "hooks": {
+    "Setup": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh\" \"${CLAUDE_PLUGIN_ROOT}\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
-        "type": "command",
-        "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-context.ts\" 2>&1",
-        "timeout": 10000
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-context.ts\" 2>&1",
+            "timeout": 10000
+          }
+        ]
       }
     ]
   }
