@@ -78,3 +78,46 @@ Validate the plugin manifest locally:
 ```bash
 claude plugin validate /path/to/worktree-manager-memory-hook
 ```
+
+## Archive (conversation → memory queue)
+
+When a Claude Code session ends or context is compacted, this plugin automatically:
+
+1. Reads the session JSONL file
+2. Strips noise (thinking, tool calls, system tags)
+3. POSTs the clean conversation to worktree-manager's memory queue
+
+### Hooks
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| SessionStart | Session begins | Inject memory context |
+| PreCompact | Before context compaction | Archive conversation before context is lost |
+| SessionEnd | Session exits | Archive complete conversation |
+
+### Manual trigger
+
+Use `/memory-sync` in any Claude Code session to manually submit the current conversation to the archive queue.
+
+### Configuration
+
+Default config at `config/memory-hook.config.json`:
+
+```json
+{
+  "worktreeManager": {
+    "endpoint": "http://localhost:9399"
+  },
+  "archive": {
+    "autoOnSessionEnd": true
+  }
+}
+```
+
+Override per-workspace by creating `.vault/memory-hook.config.json` with the same structure.
+
+### Archive logs
+
+```bash
+tail -f /tmp/worktree-memory-archive.log
+```

@@ -1,9 +1,11 @@
 {
   "name": "worktree-manager-memory-hook",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
-    "inject": "bun run scripts/inject-context.ts"
+    "inject": "bun run scripts/inject-context.ts",
+    "archive": "bun run scripts/archive-memory.ts",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest",

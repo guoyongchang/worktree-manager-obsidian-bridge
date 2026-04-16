@@ -1,5 +1,5 @@
 {
-  "description": "Native SessionStart context injection for worktree-manager workspaces.",
+  "description": "Memory Wiki context injection and archive hooks for worktree-manager workspaces.",
   "hooks": {
     "Setup": [
       {
@@ -21,6 +21,30 @@
             "type": "command",
             "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-context.ts\" 2>&1",
             "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/archive-memory.ts\" --trigger=pre-compact 2>&1",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "export PATH=\"$HOME/.bun/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\"; bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/archive-memory.ts\" --trigger=session-end 2>&1",
+            "timeout": 30000
           }
         ]
       }
