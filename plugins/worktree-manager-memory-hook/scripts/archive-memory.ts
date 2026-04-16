@@ -17,23 +17,10 @@ import type { TriggerType } from "./archive/http-client";
 import * as fs from "fs";
 
 const LOG_FILE = "/tmp/worktree-memory-archive.log";
-const MAX_LOG_SIZE = 1024 * 1024; // 1MB
 
 function fileLog(message: string): void {
   const timestamp = new Date().toISOString();
-  const line = `[${timestamp}] ${message}\n`;
-
-  try {
-    if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > MAX_LOG_SIZE) {
-      const content = fs.readFileSync(LOG_FILE, "utf-8");
-      const lines = content.split("\n");
-      fs.writeFileSync(LOG_FILE, lines.slice(-500).join("\n") + "\n");
-    }
-  } catch {
-    // Ignore rotation errors
-  }
-
-  fs.appendFileSync(LOG_FILE, line);
+  fs.appendFileSync(LOG_FILE, `[${timestamp}] ${message}\n`);
 }
 
 function parseTrigger(): TriggerType {
