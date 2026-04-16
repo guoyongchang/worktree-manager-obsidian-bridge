@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { buildPayload } from "../scripts/archive/http-client";
+import { buildPayload, postToQueue } from "../scripts/archive/http-client";
 
 describe("buildPayload", () => {
   test("constructs correct payload structure", () => {
@@ -32,6 +32,51 @@ describe("buildPayload", () => {
         trigger,
       });
       expect(payload.trigger).toBe(trigger);
+    }
+  });
+});
+
+describe("postToQueue", () => {
+  test("succeeds when server returns 202", async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        return new Response(JSON.stringify({ id: "queue-1" }), { status: 202 });
+      },
+    });
+
+    try {
+      await postToQueue(`http://localhost:${server.port}`, buildPayload({
+        sessionId: "s1",
+        worktree: { cwd: "/test" },
+        conversation: "test",
+        trigger: "manual",
+      }));
+      // Should not throw
+    } finally {
+      server.stop();
+    }
+  });
+
+  test("throws on non-OK response", async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        return new Response("bad request", { status: 400 });
+      },
+    });
+
+    try {
+      await expect(
+        postToQueue(`http://localhost:${server.port}`, buildPayload({
+          sessionId: "s1",
+          worktree: { cwd: "/test" },
+          conversation: "test",
+          trigger: "manual",
+        }))
+      ).rejects.toThrow("Queue POST failed: 400");
+    } finally {
+      server.stop();
     }
   });
 });

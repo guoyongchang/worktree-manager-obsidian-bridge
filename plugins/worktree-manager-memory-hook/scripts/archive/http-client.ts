@@ -29,15 +29,22 @@ export function buildPayload(input: BuildPayloadInput): QueuePayload {
 
 export async function postToQueue(endpoint: string, payload: QueuePayload): Promise<void> {
   const url = `${endpoint}/api/memory/queue`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
 
-  if (!resp.ok) {
-    const body = await resp.text().catch(() => "");
-    throw new Error(`Queue POST failed: ${resp.status} ${resp.statusText} — ${body}`);
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(`Queue POST failed: ${resp.status} ${resp.statusText} — ${body}`);
+    }
+  } finally {
+    clearTimeout(timeout);
   }
 }

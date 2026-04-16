@@ -90,6 +90,16 @@ export function findSessionJsonl(cwd: string): string | undefined {
     return undefined;
   }
 
+  // Try to find by session ID from environment
+  const sessionId = process.env.CLAUDE_SESSION_ID;
+  if (sessionId) {
+    const exactPath = path.join(claudeProjectsDir, `${sessionId}.jsonl`);
+    if (fs.existsSync(exactPath)) {
+      return exactPath;
+    }
+  }
+
+  // Fallback: most recently modified .jsonl file
   const files = fs.readdirSync(claudeProjectsDir)
     .filter(f => f.endsWith(".jsonl"))
     .map(f => ({
