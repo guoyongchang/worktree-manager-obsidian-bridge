@@ -1,6 +1,6 @@
 {
   "worktreeManager": {
-    "endpoint": "http://localhost:9399"
+    "endpoint": "http://localhost:42819"
   },
   "archive": {
     "autoOnSessionEnd": true

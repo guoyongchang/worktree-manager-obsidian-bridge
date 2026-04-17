@@ -39,7 +39,7 @@
     {
       "name": "worktree-manager-memory-hook",
       "description": "Auto-inject Memory Wiki context and archive conversations for worktree-manager workspaces.",
-      "version": "2.1.2",
+      "version": "2.1.3",
       "author": {
         "name": "guoyongchang"
       },
