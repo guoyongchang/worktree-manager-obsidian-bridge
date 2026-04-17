@@ -9,6 +9,7 @@
   "homepage": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
   "repository": "https://github.com/guoyongchang/worktree-manager-obsidian-bridge",
   "license": "MIT",
+  "skills": "./skills",
   "keywords": [
     "worktree-manager",
     "memory-wiki",
