@@ -1,3 +1,8 @@
+---
+name: memory-sync
+description: "手动触发 Memory Wiki 归档，将当前对话提交到 worktree-manager 待整理队列"
+---
+
 # Memory Sync
 
 用户请求将当前对话提交到 Memory Wiki 归档队列。
