@@ -47,7 +47,7 @@ export function loadConfigFrom(pluginRoot: string, vaultPath: string | undefined
 
   // Validate required fields, fallback to defaults
   if (!config.worktreeManager?.endpoint) {
-    config.worktreeManager = { ...config.worktreeManager, endpoint: "http://localhost:9399" };
+    config.worktreeManager = { ...config.worktreeManager, endpoint: "http://localhost:42819" };
   }
   if (config.archive?.autoOnSessionEnd === undefined || config.archive?.autoOnSessionEnd === null) {
     config.archive = { ...config.archive, autoOnSessionEnd: true };

@@ -31,10 +31,12 @@ async function main() {
 
     const memory = await queryMemory(worktree);
 
-    if (!memory.requirement && !memory.project && memory.concepts.length === 0) {
+    const hasStaging = memory.staging.pending.length > 0 || memory.staging.organized.length > 0;
+
+    if (!memory.requirement && !memory.project && memory.concepts.length === 0 && !hasStaging) {
       fileLog("No memory found for this worktree");
     } else {
-      fileLog(`Memory found: req=${!!memory.requirement}, project=${!!memory.project}, concepts=${memory.concepts.length}`);
+      fileLog(`Memory found: req=${!!memory.requirement}, project=${!!memory.project}, concepts=${memory.concepts.length}, staging_pending=${memory.staging.pending.length}, staging_organized=${memory.staging.organized.length}`);
 
       const context = buildContext(worktree, memory);
       injectedLines = context.split("\n").length;

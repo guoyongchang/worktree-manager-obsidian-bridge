@@ -122,6 +122,31 @@ export function buildContext(worktree: WorktreeInfo, memory: MemoryResult): stri
     }
   }
 
+  // Staging sessions
+  const totalStaging = memory.staging.pending.length + memory.staging.organized.length;
+  if (totalStaging > 0) {
+    parts.push("## Memory Staging");
+    parts.push("");
+    if (memory.staging.pending.length > 0) {
+      parts.push(`**${memory.staging.pending.length} pending session(s) to archive:**`);
+      for (const s of memory.staging.pending) {
+        const meta = [s.branch, s.project, s.requirementId].filter(Boolean).join(" / ");
+        parts.push(`- \`${s.filename}\` — ${s.messageCount} messages${meta ? ` (${meta})` : ""}`);
+      }
+      parts.push("");
+    }
+    if (memory.staging.organized.length > 0) {
+      parts.push(`**${memory.staging.organized.length} organized summary(s) ready to finalize:**`);
+      for (const s of memory.staging.organized) {
+        const meta = [s.branch, s.project, s.requirementId].filter(Boolean).join(" / ");
+        parts.push(`- \`${s.filename}\`${meta ? ` — ${meta}` : ""}`);
+      }
+      parts.push("");
+    }
+    parts.push("Run `/memory-archive` to archive organized summaries into the Memory Wiki.");
+    parts.push("");
+  }
+
   parts.push("</worktree-memory>");
 
   return parts.join("\n");

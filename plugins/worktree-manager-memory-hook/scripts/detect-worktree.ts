@@ -116,7 +116,20 @@ export async function detectWorktree(cwd: string): Promise<WorktreeInfo | undefi
     return undefined;
   }
 
-  const branch = await getGitBranch(cwd);
+  let branch = await getGitBranch(cwd);
+
+  // Fallback: infer branch from worktree directory name when no .git at cwd
+  if (!branch) {
+    const relativePath = path.relative(spaceRoot, cwd);
+    const parts = relativePath.split(path.sep);
+    if (parts[0] === "worktrees" && parts[1]) {
+      branch = parts[1];
+    } else if (parts[0]) {
+      // cwd is directly under space root (e.g. ux-optimize)
+      branch = parts[0];
+    }
+  }
+
   const requirementId = branch ? extractRequirementId(branch) : undefined;
 
   // Try to find project name from path

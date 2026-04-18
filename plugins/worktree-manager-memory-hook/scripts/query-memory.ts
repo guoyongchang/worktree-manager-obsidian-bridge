@@ -13,6 +13,15 @@ export interface MemoryEntry {
   content: string;
 }
 
+export interface StagingEntry {
+  filename: string;
+  messageCount: number;
+  branch?: string;
+  project?: string;
+  requirementId?: string;
+  isOrganized: boolean;
+}
+
 export interface MemoryResult {
   requirement?: {
     id: string;
@@ -23,6 +32,10 @@ export interface MemoryResult {
     content: string;
   };
   concepts: MemoryEntry[];
+  staging: {
+    pending: StagingEntry[];
+    organized: StagingEntry[];
+  };
 }
 
 /**
@@ -132,16 +145,84 @@ function findProject(memoryRoot: string, projectName: string): { name: string; c
 }
 
 /**
+ * Query .memory-staging/ for pending sessions and organized summaries.
+ */
+function queryStaging(worktree: WorktreeInfo): MemoryResult["staging"] {
+  const pending: StagingEntry[] = [];
+  const organized: StagingEntry[] = [];
+
+  const stagingDir = path.join(worktree.cwd, ".memory-staging");
+  if (!fs.existsSync(stagingDir)) {
+    return { pending, organized };
+  }
+
+  // Pending sessions: *.json files directly in stagingDir
+  try {
+    const files = fs.readdirSync(stagingDir).filter(f => f.endsWith(".json"));
+    for (const file of files) {
+      try {
+        const content = JSON.parse(fs.readFileSync(path.join(stagingDir, file), "utf-8"));
+        pending.push({
+          filename: file,
+          messageCount: content.message_count || content.conversation?.length || 0,
+          branch: content.worktree?.branch,
+          project: content.worktree?.project,
+          requirementId: content.worktree?.requirement_id,
+          isOrganized: false,
+        });
+      } catch {
+        // skip malformed
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // Organized summaries: organized/*.md
+  const organizedDir = path.join(stagingDir, "organized");
+  if (fs.existsSync(organizedDir)) {
+    try {
+      const files = fs.readdirSync(organizedDir).filter(f => f.endsWith(".md"));
+      for (const file of files) {
+        // Try to find matching JSON for metadata
+        const jsonName = file.replace(".md", ".json");
+        let meta: any = {};
+        try {
+          meta = JSON.parse(fs.readFileSync(path.join(stagingDir, jsonName), "utf-8"));
+        } catch {
+          // no matching json
+        }
+        organized.push({
+          filename: file,
+          messageCount: meta.message_count || meta.conversation?.length || 0,
+          branch: meta.worktree?.branch,
+          project: meta.worktree?.project,
+          requirementId: meta.worktree?.requirement_id,
+          isOrganized: true,
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return { pending, organized };
+}
+
+/**
  * Query the Memory Wiki for context relevant to this worktree.
  */
 export async function queryMemory(worktree: WorktreeInfo): Promise<MemoryResult> {
   const result: MemoryResult = {
     concepts: [],
+    staging: { pending: [], organized: [] },
   };
 
   const memoryRoot = findMemoryRoot(worktree);
 
   if (!memoryRoot) {
+    // Still query staging even if no vault memory
+    result.staging = queryStaging(worktree);
     return result;
   }
 
@@ -154,6 +235,9 @@ export async function queryMemory(worktree: WorktreeInfo): Promise<MemoryResult>
   if (worktree.project) {
     result.project = findProject(memoryRoot, worktree.project);
   }
+
+  // Query staging
+  result.staging = queryStaging(worktree);
 
   return result;
 }

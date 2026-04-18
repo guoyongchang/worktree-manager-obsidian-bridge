@@ -30,18 +30,18 @@ describe("loadConfigFrom", () => {
   test("loads default config from plugin dir", () => {
     const pluginRoot = import.meta.dir + "/..";
     const config = loadConfigFrom(pluginRoot, undefined);
-    expect(config.worktreeManager.endpoint).toBe("http://localhost:9399");
+    expect(config.worktreeManager.endpoint).toBe("http://localhost:42819");
     expect(config.archive.autoOnSessionEnd).toBe(true);
   });
 
   test("returns defaults when no override exists", () => {
     const pluginRoot = import.meta.dir + "/..";
     const config = loadConfigFrom(pluginRoot, "/nonexistent/path");
-    expect(config.worktreeManager.endpoint).toBe("http://localhost:9399");
+    expect(config.worktreeManager.endpoint).toBe("http://localhost:42819");
   });
 
   test("handles null override values gracefully", () => {
-    const base = { worktreeManager: { endpoint: "http://localhost:9399" }, archive: { autoOnSessionEnd: true } };
+    const base = { worktreeManager: { endpoint: "http://localhost:42819" }, archive: { autoOnSessionEnd: true } };
     const override = { archive: null };
     const merged = deepMerge(base, override);
     // archive becomes null, but loadConfigFrom should fix this
@@ -52,7 +52,7 @@ describe("loadConfigFrom", () => {
     const pluginRoot = import.meta.dir + "/..";
     // loadConfigFrom with valid plugin root but test that defaults are enforced
     const config = loadConfigFrom(pluginRoot, undefined);
-    expect(config.worktreeManager.endpoint).toBe("http://localhost:9399");
+    expect(config.worktreeManager.endpoint).toBe("http://localhost:42819");
     expect(config.archive.autoOnSessionEnd).toBe(true);
   });
 });
