@@ -42,7 +42,7 @@ export async function queryMemory(worktree: WorktreeInfo): Promise<MemoryResult>
   }
 
   const reqDocsDir = path.join(worktree.cwd, "requirement-docs", branch);
-  const candidates = ["README.md", "PLAN.md", "design.md"];
+  const candidates = ["plan.md", "README.md", "design.md"];
 
   for (const candidate of candidates) {
     const docPath = path.join(reqDocsDir, candidate);
