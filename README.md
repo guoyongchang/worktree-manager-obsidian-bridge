@@ -1,154 +1,206 @@
 # worktree-manager-obsidian-bridge
 
-Bridge `worktree-manager`-style workspaces with an Obsidian-backed AI wiki for Claude Code and Codex.
+Claude Code plugin for [worktree-manager](https://github.com/guoyongchang/worktree-manager) workspaces.
 
-This repo packages a reusable workflow for:
+Provides **context injection**, **conversation archiving**, and **Memory Wiki organization** — all local, no external queue.
 
-- restoring a workspace from a Vault-backed wiki
-- maintaining a local `.vault/` linked-docs layer
-- declaring expected Claude Code, Codex, skills, and MCP state
-- ingesting new knowledge back into the right workspace wiki pages
+## What it does
 
-## What is in this repo
+### 1. SessionStart: Inject requirement context
 
-- `skills/workspace-vault-maintainer/`
-  The core skill for restore and ingest workflows
+When entering a worktree, reads `requirement-docs/{branch}/README.md` and injects it into Claude's system prompt:
 
-- `commands/workspace-restore.md`
-  A reusable command/prompt entry for full workspace restore
+```xml
+<worktree-requirement-doc>
+<!-- Source: /path/to/requirement-docs/feature-27118/README.md -->
+[content]
+</worktree-requirement-doc>
+```
 
-- `commands/workspace-ingest.md`
-  A reusable command/prompt entry for wiki ingest after meaningful work
+Nothing else is injected — no memory wiki pages, no project context, no staging state. Just the current worktree's requirement doc.
 
-- `AGENTS.md` and `CLAUDE.md`
-  Repo-local instructions for maintaining this project itself
+### 2. SessionEnd / PreCompact: Archive to staging
 
-- `.claude-plugin/plugin.json`
-  A native Claude Code plugin manifest for local plugin discovery
+At session end or compaction, reads the session JSONL, extracts the `{role, content}` conversation, and writes:
 
-- `.claude-plugin/marketplace.json`
-  A native Claude Code marketplace catalog for installing the plugin from GitHub
+```
+.memory-staging/session-{timestamp}-{sessionId}.json
+```
 
-## Intended workflow
+Format is compatible with the organizer pipeline (see below).
 
-1. Stand in a workspace root
-2. Restore the workspace from the Vault-backed wiki
-3. Do the actual work
-4. Ingest durable knowledge back into the workspace wiki
+### 3. /memory-sync — Manual archive trigger
 
-## Design principles
+Users can run `/memory-sync` anytime to immediately archive the current conversation to staging.
 
-- The Vault is the source of truth for workspace knowledge
-- The local workspace is the runtime location
-- Full restore should create a local `.vault/` linked-docs layer
-- Restore and ingest should be declarative when possible
-- Claude Code and Codex should share the same mental model even when their plugin models differ
+### 4. /memory-archive — Run finalize
+
+Users can run `/memory-archive` to execute the finalize pipeline, which:
+1. Reads `.memory-staging/organized/*.md` summaries
+2. Reads current `memory/` wiki state
+3. Calls LLM to generate file operations
+4. Applies them to `memory/` (updates requirements, projects, index, log)
+5. Cleans up staging on success
+
+**Prerequisite:** Run `--accumulate` first (see below).
+
+### 5. Built-in organizer (accumulate + finalize)
+
+The plugin embeds `scripts/organizer/` — a two-phase LLM pipeline:
+
+| Phase | Command | Model | Input | Output |
+|-------|---------|-------|-------|--------|
+| **accumulate** | `bun run scripts/organizer/index.ts --accumulate` | gpt-4o-mini | `.memory-staging/*.json` | `.memory-staging/organized/*.md` |
+| **finalize** | `/memory-archive` or `--finalize` | gpt-5.4 | organized + `memory/` state | Updated `memory/` wiki |
+
+```bash
+# Step 1: accumulate (cheap, run manually or on CI)
+export OPENAI_API_KEY="..."
+bun run "${CLAUDE_PLUGIN_ROOT}/scripts/organizer/index.ts" \
+  --accumulate --staging .memory-staging --config .memory-organizer.config.json
+
+# Step 2: finalize (via /memory-archive skill, or manually)
+bun run "${CLAUDE_PLUGIN_ROOT}/scripts/organizer/index.ts" \
+  --finalize --staging .memory-staging --memory memory --config .memory-organizer.config.json
+```
+
+### 6. Vault restore/ingest (legacy skill)
+
+`skills/workspace-vault-maintainer/` provides Obsidian Vault restore and ingest workflows. This was the original purpose of this repo; the memory hook features have since become the primary use case.
+
+## Architecture
+
+```
+Claude Code Session
+  ├── SessionStart  → inject-context.ts → requirement-docs/{branch}/README.md
+  ├── SessionEnd    → archive-memory.ts → .memory-staging/session-XXX.json
+  ├── PreCompact    → archive-memory.ts → .memory-staging/session-XXX.json
+  ├── /memory-sync  → archive-memory.ts --trigger=manual
+  └── /memory-archive → organizer/index.ts --finalize
+```
+
+All data stays local:
+- Staging: `.memory-staging/` in worktree root
+- Wiki: `memory/` in Vault root
+- Config: `.memory-organizer.config.json` in worktree root
 
 ## Installation
 
-### Codex
-
-Clone this repo somewhere stable, then expose the skill through your normal Codex skill discovery path.
-
-Example:
-
-```bash
-git clone https://github.com/guoyongchang/worktree-manager-obsidian-bridge.git ~/worktree-manager-obsidian-bridge
-mkdir -p ~/.agents/skills
-ln -s ~/worktree-manager-obsidian-bridge/skills/workspace-vault-maintainer ~/.agents/skills/workspace-vault-maintainer
-```
-
-After that, Codex can discover the skill as `workspace-vault-maintainer`.
-
-### Claude Code
-
-This repo ships:
-
-- `.claude-plugin/plugin.json` for local plugin discovery
-- `.claude-plugin/marketplace.json` for Claude marketplace distribution
-
-It keeps plugin components in the standard plugin-root locations:
-
-- `skills/`
-- `commands/`
-
-For development and local testing, use the official plugin-dir flow:
-
-```bash
-claude --plugin-dir /path/to/worktree-manager-obsidian-bridge
-```
-
-The local plugin namespace is:
-
-```text
-worktree-manager-obsidian-bridge
-```
-
-So plugin-scoped skills and commands will appear with that namespace in Claude Code.
-
-For marketplace installation from GitHub, add the marketplace and then install the plugin:
+### Marketplace
 
 ```bash
 claude plugin marketplace add guoyongchang/worktree-manager-obsidian-bridge
-claude plugin install worktree-manager-obsidian-bridge@worktree-manager-obsidian-bridge
+claude plugin install worktree-manager-memory-hook@worktree-manager-obsidian-bridge
 ```
 
-For a team project, you can also declare the marketplace and plugin in `.claude/settings.json` so Claude Code can restore them automatically at project scope.
+Or declare in `.claude/settings.json`:
 
-Claude Code and Codex do not consume skills in exactly the same way, so the recommended shared pattern is:
+```json
+{
+  "enabledPlugins": {
+    "worktree-manager-memory-hook@worktree-manager-obsidian-bridge": true
+  }
+}
+```
 
-- reuse `commands/workspace-restore.md` as the restore launcher prompt
-- reuse `commands/workspace-ingest.md` as the ingest launcher prompt
-- reuse the same Vault workflow, workspace registry, and `.vault/` linked-docs model
+### Local development
 
-If you maintain Claude project instructions, adapt the workflow from:
+```bash
+git clone https://github.com/guoyongchang/worktree-manager-obsidian-bridge.git
+claude --plugin-dir /path/to/worktree-manager-obsidian-bridge
+```
 
-- `skills/workspace-vault-maintainer/SKILL.md`
-- `commands/workspace-restore.md`
-- `commands/workspace-ingest.md`
+## Configuration
 
-## Usage
+### `.memory-organizer.config.json` (worktree root)
 
-### Restore
+```json
+{
+  "llm": {
+    "accumulate": {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com"
+    },
+    "finalize": {
+      "provider": "openai",
+      "model": "gpt-5.4",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com"
+    }
+  }
+}
+```
 
-From a workspace root, invoke the restore command or equivalent prompt and use `workspace-vault-maintainer` to:
+### `hooks/hooks.json` (plugin-scoped)
 
-- identify the workspace
-- load registry-backed workspace state
-- rebuild `.vault/`
-- repair local runtime files
+Registered hooks:
 
-### Ingest
+| Hook | Script | When |
+|------|--------|------|
+| Setup | `setup.sh` | Plugin install |
+| SessionStart | `inject-context.ts` | Every directory change |
+| PreCompact | `archive-memory.ts --trigger=pre-compact` | Context compaction |
+| SessionEnd | `archive-memory.ts --trigger=session-end` | Session ends |
 
-After meaningful work, invoke the ingest command or equivalent prompt and use `workspace-vault-maintainer` to:
+## File layout
 
-- identify the workspace
-- read the index, log, and ingest guidance
-- update the right wiki pages
-- append a concise log entry
+```
+.claude-plugin/
+  plugin.json              # Plugin manifest
+  marketplace.json         # Marketplace catalog
+commands/
+  workspace-restore.md     # Vault restore prompt
+  workspace-ingest.md      # Vault ingest prompt
+hooks/
+  hooks.json               # Hook definitions
+scripts/
+  archive-memory.ts        # JSONL → staging writer
+  build-context.ts         # Context string builder
+  detect-worktree.ts       # Worktree detection
+  inject-context.ts        # SessionStart entry
+  query-memory.ts          # Requirement doc reader
+  archive/                 # (legacy HTTP client, unused)
+  organizer/               # Built-in accumulate + finalize
+    commands/
+      accumulate.ts
+      finalize.ts
+    llm/
+      client.ts
+    memory/
+      reader.ts
+      writer.ts
+    prompts/
+      accumulate.md
+      finalize.md
+    config.ts
+    index.ts
+    types.ts
+skills/
+  memory-sync/             # /memory-sync skill
+  memory-archive/          # /memory-archive skill
+  workspace-vault-maintainer/  # Vault restore skill
+```
 
-## Compatibility
+## Changelog
 
-### Codex native
+### v2.2.2
+- Merge `vault-memory-organizer` into plugin (`scripts/organizer/`)
+- Update `/memory-archive` skill to use embedded organizer
 
-- `skills/workspace-vault-maintainer/SKILL.md`
-- `agents/openai.yaml`
-- references under `skills/workspace-vault-maintainer/references/`
+### v2.2.1
+- Simplify inject to only `requirement-docs/{branch}/README.md`
+- Remove memory wiki injection (requirements, projects, concepts, staging)
 
-### Claude Code native
+### v2.2.0
+- Replace HTTP queue with local `.memory-staging/` archive
+- Add `/memory-archive` skill
+- Update `/memory-sync` for local staging workflow
 
-- `.claude-plugin/plugin.json`
-- `.claude-plugin/marketplace.json`
-- plugin-root `skills/`
-- plugin-root `commands/`
+### v2.1.x
+- Memory queue backend with worktree-manager App integration
 
-This repo is intended to be:
+## License
 
-- a native Codex skill package
-- a native Claude Code local plugin directory
-- a native Claude Code marketplace catalog
-- a shared workflow definition for both tools
-
-## Current focus
-
-The first version targets `worktree-manager`-style multi-repo workspace roots backed by an Obsidian Vault wiki. The abstractions are intentionally generic enough to extend to other workspace layouts later.
+MIT
