@@ -41,11 +41,16 @@ export async function queryMemory(worktree: WorktreeInfo): Promise<MemoryResult>
     return result;
   }
 
-  const docPath = path.join(worktree.cwd, "requirement-docs", branch, "README.md");
-  const content = readFile(docPath);
+  const reqDocsDir = path.join(worktree.cwd, "requirement-docs", branch);
+  const candidates = ["README.md", "PLAN.md", "design.md"];
 
-  if (content) {
-    result.requirementDoc = { path: docPath, content };
+  for (const candidate of candidates) {
+    const docPath = path.join(reqDocsDir, candidate);
+    const content = readFile(docPath);
+    if (content) {
+      result.requirementDoc = { path: docPath, content };
+      break;
+    }
   }
 
   return result;
